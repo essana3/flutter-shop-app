@@ -48,14 +48,14 @@ class UserProductItem extends StatelessWidget {
                       actions: <Widget>[
                         FlatButton(
                           child: Text('No'),
-                          textColor: Theme.of(context).errorColor,
+                          textColor: Theme.of(ctx).errorColor,
                           onPressed: () {
                             Navigator.of(ctx).pop(false);
                           },
                         ),
                         FlatButton(
                           child: Text('Yes'),
-                          textColor: Theme.of(context).primaryColor,
+                          textColor: Theme.of(ctx).primaryColor,
                           onPressed: () {
                             Navigator.of(ctx).pop(true);
                           },
@@ -63,10 +63,18 @@ class UserProductItem extends StatelessWidget {
                       ],
                     );
                   },
-                ).then((confirm) {
+                ).then((confirm) async {
                   if (confirm) {
-                    Provider.of<Products>(context, listen: false)
-                        .deleteProduct(id);
+                    try {
+                      await Provider.of<Products>(context, listen: false)
+                          .deleteProduct(id);
+                    } catch (error) {
+                      Scaffold.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(error),
+                        ),
+                      );
+                    }
                   }
                 });
               },
