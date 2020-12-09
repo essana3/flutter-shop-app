@@ -10,6 +10,10 @@ class Products with ChangeNotifier {
   static const baseUrl =
       'https://flutter1-complete-course-default-rtdb.europe-west1.firebasedatabase.app';
   List<Product> _items = [];
+  final String token;
+  final String userId;
+
+  Products(this._items, {this.token, this.userId});
 
   List<Product> get items {
     return [..._items];
@@ -19,13 +23,19 @@ class Products with ChangeNotifier {
     return _items.length;
   }
 
-  Future<void> fetchProducts() async {
+  Future<void> fetchProducts([bool filterByUser = false]) async {
     try {
-      final res = await http.get('$baseUrl/products.json');
+      final filter =
+          filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
+      final res = await http.get('$baseUrl/products.json?auth=$token&$filter');
       final response = json.decode(res.body) as Map<String, dynamic>;
       if (response == null) {
         return;
       }
+      final favRes =
+          await http.get('$baseUrl/favorites/$userId.json?auth=$token');
+      final favResponse = json.decode(favRes.body) as Map<String, dynamic>;
+
       final List<Product> products = [];
       response.forEach((id, product) {
         products.add(Product(
@@ -34,7 +44,7 @@ class Products with ChangeNotifier {
           description: product['description'],
           imageUrl: product['imageUrl'],
           price: product['price'],
-          isFavorite: product['isFavorite'],
+          isFavorite: favResponse == null ? false : favResponse[id] ?? false,
         ));
       });
       _items = products;
@@ -56,13 +66,13 @@ class Products with ChangeNotifier {
   Future<void> addProduct(Product product) async {
     try {
       final res = await http.post(
-        '$baseUrl/products.json',
+        '$baseUrl/products.json?auth=$token',
         body: json.encode({
           'title': product.title,
           'description': product.description,
           'imageUrl': product.imageUrl,
           'price': product.price,
-          'isFavorite': product.isFavorite,
+          'creatorId': userId,
         }),
       );
       final response = json.decode(res.body);
@@ -83,7 +93,7 @@ class Products with ChangeNotifier {
 
   Future<void> updateProduct(String id, Product newProduct) async {
     await http.patch(
-      '$baseUrl/products/$id.json',
+      '$baseUrl/products/$id.json?auth=$token',
       body: json.encode({
         'title': newProduct.title,
         'description': newProduct.description,
@@ -102,7 +112,8 @@ class Products with ChangeNotifier {
     _items.removeAt(prodIndex);
     notifyListeners();
     try {
-      final response = await http.delete('$baseUrl/products/$id.json');
+      final response =
+          await http.delete('$baseUrl/products/$id.json?auth=$token');
       if (response.statusCode >= 400) {
         throw HttpException('Could not delete product!');
       }

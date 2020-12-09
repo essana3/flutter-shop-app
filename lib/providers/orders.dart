@@ -23,10 +23,14 @@ class Orders with ChangeNotifier {
   static const baseUrl =
       'https://flutter1-complete-course-default-rtdb.europe-west1.firebasedatabase.app';
   List<OrderItem> _orders = [];
+  final String token;
+  final String userId;
+
+  Orders(this._orders, {this.token, this.userId});
 
   Future<void> fetchOrders() async {
     try {
-      final res = await http.get('$baseUrl/orders.json');
+      final res = await http.get('$baseUrl/orders/$userId.json?auth=$token');
       final response = json.decode(res.body) as Map<String, dynamic>;
       if (response == null) {
         return;
@@ -49,7 +53,7 @@ class Orders with ChangeNotifier {
           createdAt: DateTime.parse(order['createdAt']),
         ));
       });
-      _orders = orders;
+      _orders = orders.reversed.toList();
     } catch (error) {
       print(error);
       throw error;
@@ -70,7 +74,7 @@ class Orders with ChangeNotifier {
     try {
       final timestamp = DateTime.now();
       final res = await http.post(
-        '$baseUrl/orders.json',
+        '$baseUrl/orders/$userId.json?auth=$token',
         body: json.encode({
           'amount': total,
           'products': products
