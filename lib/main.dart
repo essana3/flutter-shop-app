@@ -48,6 +48,12 @@ class MyApp extends StatelessWidget {
               primarySwatch: Colors.deepPurple,
               accentColor: Colors.amberAccent,
               fontFamily: 'Lato',
+              // pageTransitionsTheme: PageTransitionsTheme(
+              //   builders: {
+              //     TargetPlatform.android: CustomPageTransitionBuilder(),
+              //     TargetPlatform.iOS: CustomPageTransitionBuilder(),
+              //   },
+              // ),
             ),
             home: auth.isAuth
                 ? ProductsOverviewScreen()
